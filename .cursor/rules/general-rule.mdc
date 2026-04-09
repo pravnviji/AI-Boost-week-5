@@ -1,0 +1,42 @@
+---
+description: Project-wide context — structure, conventions, and key principles
+globs:
+alwaysApply: true
+---
+
+# Project Overview
+
+Full-stack monorepo with separate deployments and a shared database.
+
+| Directory | Stack | Purpose |
+|-----------|-------|---------|
+| `src/api/` | Python / FastAPI | Backend API |
+| `src/frontend/` | Angular 18 | Frontend application |
+| `e2e/` | Playwright | End-to-end tests |
+| `docs/` | Diataxis | Business & technical documentation |
+| `tools/` | TypeScript | Dev utilities, MCP servers |
+
+## Before Answering Any Question
+
+1. Read the relevant `ai-context.md` in the project directory
+2. Check `docs/3-reference/meta/AI_CONTEXT.md` for documentation navigation
+3. Follow project-specific rules in `.cursor/rules/`
+
+## Git Workflow
+
+**Branch format:** `<prefix>/PROJ-XXX-short-description`
+
+**Prefixes:** `feat`, `fix`, `hotfix`, `refactor`, `chore`, `docs`, `test`
+
+**Commit format** (Conventional Commits):
+```
+feat(PROJ-123): add user authentication
+fix(PROJ-456): resolve API timeout
+```
+
+## Code Quality
+
+- **Python**: ruff (lint + format), mypy (strict), pre-commit hooks
+- **Angular**: ESLint + Stylelint via `yarn lint`
+- **SQL**: sqlfluff
+- Run tests before committing — pre-commit hooks enforce this

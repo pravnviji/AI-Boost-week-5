@@ -1,0 +1,58 @@
+{
+  "page": "Dashboard",
+  "lastUpdated": "2026-04-08",
+  "summary": {
+    "totalScenarios": 3,
+    "covered": 1,
+    "uncovered": 2
+  },
+  "sections": [
+    {
+      "section": "Page Load",
+      "scenarios": [
+        {
+          "id": "AP-T001",
+          "title": "User navigates to Dashboard and sees summary cards",
+          "userAction": "User opens the Dashboard page from the main navigation",
+          "expectedOutcome": "Summary cards display with correct KPI values, loading spinners resolve within 3 seconds",
+          "sourceFiles": [
+            "src/frontend/app/dashboard/dashboard.component.html",
+            "src/frontend/app/dashboard/dashboard.component.ts"
+          ],
+          "testFile": "e2e/tests/dashboard/dashboard.spec.ts",
+          "testReference": "AP-T001: Page Load - User navigates to Dashboard and sees summary cards"
+        }
+      ]
+    },
+    {
+      "section": "Filters",
+      "scenarios": [
+        {
+          "id": "AP-T002",
+          "title": "User applies date range filter and data refreshes",
+          "userAction": "User selects a date range from the filter dropdown and clicks Apply",
+          "expectedOutcome": "Table and charts update to reflect the selected date range, URL query params update",
+          "sourceFiles": [
+            "src/frontend/app/dashboard/filters/date-filter.component.html",
+            "src/frontend/app/dashboard/filters/date-filter.component.ts",
+            "src/frontend/app/dashboard/dashboard.service.ts"
+          ],
+          "testFile": null,
+          "testReference": null
+        },
+        {
+          "id": "AP-T003",
+          "title": "User clears all filters and data resets to defaults",
+          "userAction": "User clicks the Clear Filters button",
+          "expectedOutcome": "All filter selections reset, table shows unfiltered data, URL query params cleared",
+          "sourceFiles": [
+            "src/frontend/app/dashboard/filters/date-filter.component.ts",
+            "src/frontend/app/dashboard/dashboard.component.ts"
+          ],
+          "testFile": null,
+          "testReference": null
+        }
+      ]
+    }
+  ]
+}

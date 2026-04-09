@@ -1,0 +1,46 @@
+---
+description: Backend-specific conventions for FastAPI development
+globs: src/api/**
+alwaysApply: false
+---
+
+# Backend (FastAPI)
+
+## Architecture
+
+Layered architecture: **routers → services → models/schemas**
+
+## Before Making Changes
+
+Read `src/api/ai-context.md` for:
+- Directory layout and file conventions
+- Authentication patterns
+- Error handling patterns
+- Test patterns
+
+## Conventions
+
+- All routes go in `routers/` — one file per resource
+- Business logic goes in `services/` — routers stay thin
+- Pydantic models in `schemas/` for request/response validation
+- Database queries in `repositories/`
+- Use `async def` for all route handlers
+- Type hints on every function signature
+- Docstrings on public functions
+
+## Testing
+
+```bash
+uv run pytest --cov=app
+uv run ruff check
+uv run mypy .
+```
+
+## Common Patterns
+
+```python
+# Router pattern
+@router.get("/items/{item_id}", response_model=ItemResponse)
+async def get_item(item_id: int, service: ItemService = Depends()):
+    return await service.get_item(item_id)
+```

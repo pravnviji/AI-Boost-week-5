@@ -1,0 +1,22 @@
+---
+description: Instructions for using SonarQube MCP server for code quality analysis
+globs:
+alwaysApply: true
+---
+
+# SonarQube MCP Integration
+
+After generating or modifying code files, call `analyze_file_list` to check for issues.
+
+## Workflow
+
+1. Generate / edit code
+2. Call `analyze_file_list` on changed files
+3. Fix any Blocker or Critical issues before completing the task
+4. Re-run analysis to confirm fixes
+
+## Rules
+
+- Use `search_my_sonarqube_projects` to find project keys — never guess
+- Include branch parameter when working on feature branches
+- After fixing issues, do NOT verify via `search_sonar_issues_in_projects` (server won't reflect updates yet)

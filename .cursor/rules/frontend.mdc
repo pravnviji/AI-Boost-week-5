@@ -1,0 +1,38 @@
+---
+description: Frontend-specific conventions for Angular development
+globs: src/frontend/**
+alwaysApply: false
+---
+
+# Frontend (Angular)
+
+## Lint Compliance (Required)
+
+All generated or modified code MUST pass `yarn lint` before the task is considered complete.
+
+```bash
+cd src/frontend
+yarn lint
+```
+
+## Conventions
+
+- Use Angular Signals for state management (not RxJS Subjects for local state)
+- Standalone components (no NgModules for new components)
+- Use `inject()` function instead of constructor injection
+- Template-driven forms for simple forms, reactive forms for complex ones
+- Use `data-cy` attributes for test selectors
+
+## File Naming
+
+- Components: `feature-name.component.ts`
+- Services: `feature-name.service.ts`
+- Models: `feature-name.model.ts`
+- Tests: `feature-name.component.spec.ts`
+
+## Styling
+
+- BEM naming convention for CSS classes
+- Use design system tokens for colors, spacing, typography
+- No inline styles
+- No `!important`
