@@ -42,11 +42,6 @@ AICode/
 │   │   └── ai-context.md       # Per-project AI context
 │   └── frontend/               # Frontend (Angular)
 │
-├── e2e/                        # Playwright end-to-end tests
-│   ├── tests/                  # Thin specs
-│   ├── steps/                  # Step classes + BDD strings
-│   └── pages/                  # Page objects
-│
 └── tools/
     └── jira-mcp/               # JIRA MCP server for AI integration
 ```
@@ -130,23 +125,6 @@ AICode/
 ---
 
 ## Layer 6: Scenario-Driven E2E Testing
-
-**What:** `docs/scenarios/*.scenarios.json` defines test scenarios. AI generates Playwright tests from them.
-
-**Why:** Business requirements drive tests, not the other way around. AI reads the scenario JSON (user action + expected outcome + source files) and generates the full test stack: Page Object → BDD strings → Step class → thin Spec.
-
-**The flow:**
-1. Scenarios documented in `docs/scenarios/dashboard.scenarios.json`
-2. AI reads scenario data (id, title, userAction, expectedOutcome, sourceFiles)
-3. AI generates `e2e/pages/`, `e2e/steps/`, `e2e/tests/` files
-4. AI wires `testFile` + `testReference` back to scenario JSON
-5. Coverage reports regenerated
-
-**See working examples:**
-- `e2e/pages/dashboard.page.ts` — Page Object
-- `e2e/steps/dashboard.bdd.ts` — BDD strings
-- `e2e/steps/dashboard.steps.ts` — Step class
-- `e2e/tests/dashboard.spec.ts` — Thin spec
 
 ---
 
