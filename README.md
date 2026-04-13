@@ -20,7 +20,8 @@ AICode/
 │   │   └── sonarqube-mcp.mdc   # Code quality analysis integration
 │   ├── skills/                 # Reusable expert workflows
 │   │   ├── code-review/        # Structured diff review + PR review
-│   │   └── domain-expert/      # Business planning & validation
+│   │   ├── domain-expert/      # Business planning & validation
+│   │   └── e2e/                # Zephyr-driven Playwright test generation
 │   └── commands/               # One-click slash commands
 │       ├── startwork.md        # /startwork PROJ-123 → branch + JIRA transition
 │       ├── createpr.md         # /createpr → push + PR with conventional format
@@ -37,10 +38,18 @@ AICode/
 │   ├── 4-explanation/          # Concepts: why Diataxis, architecture decisions
 │   └── scenarios/              # Test scenario catalog (JSON)
 │
+├── e2e/                        # Playwright end-to-end tests
+│   ├── tests/                  # Thin specs using appTest() wrapper
+│   ├── steps/                  # Step classes with BDD strings
+│   ├── pages/                  # Page objects with data-cy locators
+│   ├── fixtures/               # Custom Playwright fixtures
+│   ├── lib/                    # test-wrapper, zephyr-reporter
+│   └── utils/                  # zephyr-client
+│
 ├── src/
 │   ├── api/                    # Backend (FastAPI)
 │   │   └── ai-context.md       # Per-project AI context
-│   └── frontend/               # Frontend (Angular)
+│   └── frontend/               # Frontend (Angular 18 Task Manager)
 │
 └── tools/
     └── jira-mcp/               # JIRA MCP server for AI integration
@@ -79,6 +88,7 @@ AICode/
 | `code-review/SKILL.md` | Reads git diff, runs linters, outputs findings grouped by severity |
 | `code-review/pr-review.md` | Reviews GitHub PRs via `gh` CLI, posts structured comments |
 | `domain-expert/SKILL.md` | Reads domain docs, queries database, validates business logic |
+| `e2e/code-conventions.mdc` | Fetches Zephyr test cases, cross-refs scenario JSON, generates full Playwright tests |
 
 ---
 
@@ -126,9 +136,40 @@ AICode/
 
 ## Layer 6: Scenario-Driven E2E Testing
 
+**What:** `docs/scenarios/*.scenarios.json` define test scenarios that map to Zephyr Scale test cases. The `code-conventions` skill reads these + Zephyr to auto-generate Playwright tests.
+
+**E2E Architecture (follows dp-investment-engine pattern):**
+
+```
+e2e/
+├── tests/         # Thin specs using appTest() wrapper
+├── steps/         # Step classes with BDD strings + orchestration
+├── pages/         # Page objects with data-cy locators
+├── fixtures/      # Playwright custom fixtures
+├── lib/           # test-wrapper, zephyr-reporter
+└── utils/         # zephyr-client
+```
+
+**Demo Angular App** (`src/frontend/`): A Task Manager app with Dashboard, Task List, and Task Detail pages.
+
 ---
 
 ## Getting Started
+
+### Run the demo
+
+```bash
+# 1. Start the Angular app
+cd src/frontend && npm start
+
+# 2. Run Playwright tests (in another terminal)
+cd e2e && npx playwright test
+
+# 3. Seed Zephyr demo test cases (requires ZEPHYR_API_TOKEN in e2e/.env)
+node docs/scenarios/seed-zephyr-demo.mjs
+
+# 4. In Cursor chat, say "Run Automate" to trigger AI test generation
+```
 
 ### Try it yourself
 
@@ -137,6 +178,7 @@ AICode/
 3. Type `/startwork` in chat to see the command in action
 4. Ask Cursor: "Review my code changes" to trigger the code-review skill
 5. Ask: "What is the dashboard scenario coverage?" — AI reads `docs/scenarios/` and reports
+6. Say: **"Run Automate"** — AI fetches Zephyr test cases, generates full e2e specs
 
 ### Adapt for your project
 

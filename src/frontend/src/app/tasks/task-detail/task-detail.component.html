@@ -1,0 +1,51 @@
+<div class="task-detail" data-cy="task-detail-page">
+  <h1 data-cy="task-detail-title">{{ pageTitle() }}</h1>
+
+  <mat-card data-cy="task-detail-form-card">
+    <mat-card-content>
+      <form class="task-detail__form" (ngSubmit)="save()" data-cy="task-detail-form">
+        <mat-form-field appearance="outline" class="task-detail__field">
+          <mat-label>Task Name</mat-label>
+          <input matInput [(ngModel)]="name" name="name" required data-cy="input-task-name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="task-detail__field">
+          <mat-label>Description</mat-label>
+          <textarea matInput [(ngModel)]="description" name="description" rows="4" data-cy="input-task-description"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="task-detail__field">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="status" name="status" data-cy="select-task-status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="task-detail__field">
+          <mat-label>Priority</mat-label>
+          <mat-select [(ngModel)]="priority" name="priority" data-cy="select-task-priority">
+            @for (p of priorities; track p) {
+              <mat-option [value]="p">{{ p }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="task-detail__field">
+          <mat-label>Due Date</mat-label>
+          <input matInput type="date" [(ngModel)]="dueDate" name="dueDate" data-cy="input-task-due-date" />
+        </mat-form-field>
+
+        <div class="task-detail__actions">
+          <button mat-raised-button color="primary" type="submit" data-cy="btn-save-task">
+            <mat-icon>save</mat-icon> Save
+          </button>
+          <button mat-stroked-button type="button" (click)="cancel()" data-cy="btn-cancel">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

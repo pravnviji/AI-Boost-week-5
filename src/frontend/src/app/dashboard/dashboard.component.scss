@@ -1,0 +1,41 @@
+.dashboard {
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  &__card {
+    text-align: center;
+
+    &--completed {
+      border-left: 4px solid #4caf50;
+    }
+
+    &--progress {
+      border-left: 4px solid #2196f3;
+    }
+
+    &--pending {
+      border-left: 4px solid #ff9800;
+    }
+  }
+
+  &__card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    margin-top: 8px;
+  }
+
+  &__table {
+    width: 100%;
+  }
+
+  &__task-link {
+    cursor: pointer;
+    color: #1976d2;
+    text-decoration: underline;
+  }
+}

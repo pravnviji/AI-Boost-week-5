@@ -1,0 +1,294 @@
+---
+description: "Run Automate" — Zephyr-driven e2e test generation. Fetches test cases from Zephyr Scale, reads the structured scenario from each test case's objective field, and generates full-stack Playwright tests (POM + BDD + Steps + Spec). Also supports single-ID workflow ("create AP-T### spec"). Use when generating or refreshing e2e tests.
+globs: e2e/tests/**/*.spec.ts, e2e/pages/**/*.ts, e2e/steps/**/*.ts, e2e/fixtures/**/*.ts
+---
+
+# Zephyr-Driven Playwright Test Generation
+
+## Source of truth: Zephyr test case objective
+
+Each Zephyr test case's **`objective`** field contains a **structured JSON** scenario object that drives test generation. This is the canonical contract — not local files.
+
+The objective JSON has this shape:
+
+```json
+{
+  "title": "User clicks a task row and navigates to task detail",
+  "userAction": "User clicks a task name link in the recent tasks table",
+  "expectedOutcome": "Browser navigates to /tasks/:id, task detail page is displayed with the correct task name",
+  "sourceFiles": [
+    "src/frontend/src/app/dashboard/dashboard.component.html",
+    "src/frontend/src/app/dashboard/dashboard.component.ts"
+  ],
+  "testFile": null,
+  "testReference": null
+}
+```
+
+When implementing or refreshing Playwright tests:
+
+- **Follow the objective JSON as written** — use `title`, `userAction`, `expectedOutcome`, and `sourceFiles` as the contract.
+- The Zephyr **key** (e.g. `AP-T161`) becomes the test's `zephyrTestCaseKey` and the method suffix (`runApT161`).
+- The Zephyr **name** (e.g. `"DEMO - Dashboard - User clicks a task row..."`) tells you the feature area for routing.
+
+---
+
+## 1. "Run Automate" command (primary workflow)
+
+### Trigger phrases
+
+- `"Run Automate"`, `"run automate"`, `"automate e2e"`
+
+### Overview
+
+Fetch test cases from Zephyr Scale whose **name starts with `"DEMO"`**, check which ones already have e2e coverage, and generate full-stack Playwright tests for any that don't — using the **objective** field as the scenario spec.
+
+### Step 1 — Fetch Zephyr test cases
+
+Run the list script from the **repository root** and capture the JSON output:
+
+```bash
+node docs/scenarios/list-zephyr-testcases.mjs --folder="AI Boost Demo" --prefix="DEMO"
+```
+
+The `--prefix="DEMO"` flag filters so only test cases whose name starts with `"DEMO"` are returned. The script outputs a JSON array to **stdout** (progress to stderr). Each entry includes the parsed `objective`:
+
+```json
+[
+  {
+    "key": "AP-T169",
+    "name": "DEMO - Task List - User clears filters and all tasks reappear",
+    "folderId": 123,
+    "objective": {
+      "title": "User clears filters and all tasks reappear",
+      "userAction": "User clicks the Clear Filters button",
+      "expectedOutcome": "All filter selections reset to 'All', table shows all tasks again",
+      "sourceFiles": ["src/frontend/src/app/tasks/task-list/task-list.component.html", "..."],
+      "testFile": null,
+      "testReference": null
+    }
+  }
+]
+```
+
+Parse this output and collect all test cases.
+
+### Step 2 — Classify each test case
+
+For **each** test case from Step 1:
+
+1. **Check the `objective`** — if it is `null`, not an object, or missing `userAction` / `expectedOutcome` fields → mark as **skipped** (no scenario data to generate from — ignore it).
+2. **Search `e2e/`** for the key string (e.g. `"AP-T161"`) in spec files, step files, and BDD files.
+   - **If found** → mark as **existing** (already has a test — skip).
+   - **If not found** → mark as **actionable** (needs test generation).
+
+### Step 3 — Report to user
+
+Before generating any code, **print a summary table**:
+
+```
+Run Automate — Summary
+──────────────────────────────────────────────────
+Existing (already in e2e):     X  [AP-T201, ...]
+Actionable (will generate):    Y  [AP-T161, AP-T163, ...]
+Skipped (no objective data):   Z  [...]
+──────────────────────────────────────────────────
+```
+
+List each actionable key with its **title** from the objective so the user can review before generation proceeds.
+
+### Step 4 — Generate full-stack e2e code
+
+For **each actionable test case** (process one at a time, in key order):
+
+1. **Read the `objective`** from the Zephyr output — this is your scenario contract.
+2. **Read `sourceFiles`** listed in the objective — identify `data-cy` selectors from `.html`, service calls from `.ts`.
+3. **Determine target feature area** using the Zephyr **`name`** prefix and the **Feature-Area Routing Table** (§7 below).
+4. **Generate code** following the **Structural Hierarchy** (§6) and **Code Templates** (§9):
+   - **Page Object**: Add new methods/locators in the target `*.page.ts` (or create if new feature area).
+   - **BDD strings**: Add new entries in the target `*.bdd.ts`.
+   - **Step class**: Add a new `runApT###()` method in the target `*.steps.ts`.
+   - **Thin spec**: Add a new `appTest({ zephyrTestCaseKey: "AP-T###", ... })` entry in the target `*.spec.ts`.
+5. **Move to the next actionable test case.**
+
+---
+
+## 2. Single-ID workflow (fallback)
+
+When the user gives a **single Zephyr key**:
+
+- `create "AP-T161" spec`
+- `add e2e for AP-T161`
+- `automate AP-T161`
+
+### 2a. Resolve scenario from Zephyr
+
+1. **Run the list script** and find the test case with the matching key.
+2. **If not found** in Zephyr output — tell the user the key was not found.
+3. **If found** — read its **`objective`** JSON. This is the scenario payload.
+4. **If objective is empty or not structured JSON** — tell the user the test case has no scenario data to generate from.
+
+### 2b. Existing spec vs new work
+
+1. **Search `e2e/`** for the key in `appTest({ ... })` patterns.
+2. **If a matching test already exists** — **update** it in dependency order: page object → BDD → step class → spec.
+3. **If no existing test** — **create** it following Step 4 above.
+
+---
+
+## 3. Mandatory checklist
+
+| Step | Action |
+|------|--------|
+| 1 | Implement the spec (POM / BDD / steps / thin `test()`). |
+| 2 | Run `npx playwright test` from `e2e/` to verify the generated tests pass. |
+
+Do **not** write anything back to Zephyr — the skill is read-only.
+
+---
+
+## 4. Input processing (from the Zephyr objective)
+
+- **`sourceFiles`**: You MUST call `read_file` on every path in this array immediately. Identify `data-cy` selectors from `.html`, service calls from `.ts`.
+- **Zephyr `key`** (e.g. `AP-T161`): Use as the `zephyrTestCaseKey` and in the step method name (`runApT161`).
+- **`title`**: Use for the `appTest` name: `"<section> - <title>"` pattern matching existing specs.
+- **`userAction`**: Map to step-class methods. Orchestration belongs in `*.steps.ts`, not in the spec.
+- **`expectedOutcome`**: Every comma-separated item MUST have a corresponding `expect()` in the step class.
+- **Zephyr `name`** prefix (e.g. `"DEMO - Dashboard - ..."` or `"DEMO - Task List - ..."`): Determines the feature area for routing (§7).
+
+---
+
+## 5. Automation constraints
+
+- **No auth needed** — this is a demo app with no login. Use the `authenticatedPage` fixture which simply navigates to the app.
+- **Use `data-cy` selectors** — the Angular app uses `data-cy` attributes on all key elements.
+- **Iteration**: Run `npx playwright test` from `e2e/` after changes; fix locators in page objects first.
+
+---
+
+## 6. Structural hierarchy (required)
+
+Layering: **tests → steps → pages** (plus shared **fixtures** and **components**).
+
+1. **Elements (private)**: Define locators inside the **Page** class using `this.page.locator('[data-cy="..."]')`.
+2. **Page object**: `e2e/pages/{feature}/{pageName}.page.ts` — UI locators and assertions tied to a single screen.
+3. **BDD text module**: `e2e/steps/{feature}/{pageName}.bdd.ts` — exports **canonical strings only** (`as const`).
+4. **Step class**: `e2e/steps/{feature}/{pageName}.steps.ts` — extends `BaseStep`, implements `async runApT###()` methods using `test.step(bddString, ...)`.
+5. **Fixtures**: `e2e/fixtures/base.fixture.ts` — `authenticatedPage` fixture.
+6. **Test spec**: `e2e/tests/{feature}/*.spec.ts` — **thin**: import fixtures, create page objects, call step methods.
+
+### File placement quick reference
+
+| Artifact | Location |
+|----------|----------|
+| Spec | `e2e/tests/{feature}/*.spec.ts` |
+| Step text | `e2e/steps/{feature}/*.bdd.ts` |
+| Step class | `e2e/steps/{feature}/*.steps.ts` |
+| Base step | `e2e/steps/base.step.ts` |
+| Page object | `e2e/pages/{feature}/*.page.ts` |
+| Fixtures | `e2e/fixtures/base.fixture.ts`, `e2e/fixtures/index.ts` |
+
+---
+
+## 7. Feature-area routing table
+
+Use the Zephyr **`name`** prefix to determine where generated files belong. The name format is `"DEMO - <Area> - <Title>"`.
+
+| Zephyr name prefix | Spec file | Steps file | BDD file | Page object |
+|--------------------|-----------|------------|----------|-------------|
+| `DEMO - Dashboard` | `e2e/tests/dashboard/dashboard.spec.ts` | `e2e/steps/dashboard/dashboard.steps.ts` | `e2e/steps/dashboard/dashboard.bdd.ts` | `e2e/pages/dashboard/dashboard.page.ts` |
+| `DEMO - Task List` | `e2e/tests/tasks/taskList.spec.ts` | `e2e/steps/tasks/taskList.steps.ts` | `e2e/steps/tasks/taskList.bdd.ts` | `e2e/pages/tasks/taskList.page.ts` |
+| `DEMO - Task Detail` | `e2e/tests/tasks/taskDetail.spec.ts` | `e2e/steps/tasks/taskDetail.steps.ts` | `e2e/steps/tasks/taskDetail.bdd.ts` | `e2e/pages/tasks/taskDetail.page.ts` |
+
+### Adding a new feature area
+
+When a new name prefix appears that is not in the table above:
+
+1. Derive a **camelCase slug** from the area name (e.g. `"DEMO - Search Goals"` → `searchGoals`).
+2. Create the four files: `*.spec.ts`, `*.steps.ts`, `*.bdd.ts`, `*.page.ts`.
+3. The spec file should have a top-level `test.describe("<Area Name>", () => { ... })` with `test.describe.configure({ mode: "serial" })`.
+
+---
+
+## 8. Code templates
+
+### `appTest` wrapper (`e2e/lib/test-wrapper.ts`)
+
+All specs use `appTest` instead of bare `test()`. The wrapper:
+- Accepts `zephyrTestCaseKey` (like `"AP-T161"`), `name`, `fn`.
+- Builds the Playwright title as `"AP-T161: <name>"`.
+- Provides `{ authenticatedPage, env }` fixtures.
+
+### BDD strings (`e2e/steps/{feature}/example.bdd.ts`)
+```typescript
+export const DashboardBdd = {
+  PAGE_LOAD: {
+    NAVIGATE: "User navigates to the Dashboard page",
+    SEE_CARDS: "Summary cards display with correct values",
+  },
+} as const;
+```
+
+### Step class (`e2e/steps/{feature}/example.steps.ts`)
+```typescript
+import { test, expect } from "../../fixtures";
+import { BaseStep } from "../base.step";
+import { DashboardBdd } from "./dashboard.bdd";
+import { DashboardPage } from "../../pages/dashboard/dashboard.page";
+
+export class DashboardSteps extends BaseStep {
+  constructor(private readonly dashboardPage: DashboardPage) {
+    super();
+  }
+
+  async runApT201(): Promise<void> {
+    await test.step(DashboardBdd.PAGE_LOAD.NAVIGATE, async () => {
+      await this.dashboardPage.navigateTo();
+    });
+    await test.step(DashboardBdd.PAGE_LOAD.SEE_CARDS, async () => {
+      await expect(this.dashboardPage.totalTasksCard).toBeVisible();
+    });
+  }
+}
+```
+
+### Thin spec (`e2e/tests/{feature}/example.spec.ts`)
+```typescript
+import { test } from "../../fixtures";
+import { appTest } from "../../lib/test-wrapper";
+import { DashboardSteps } from "../../steps/dashboard/dashboard.steps";
+import { DashboardPage } from "../../pages/dashboard/dashboard.page";
+
+test.describe("Dashboard", () => {
+  test.describe.configure({ mode: "serial" });
+
+  appTest({
+    zephyrTestCaseKey: "AP-T201",
+    name: "Page Load - User navigates to Dashboard and sees summary cards",
+    fn: async ({ authenticatedPage }) => {
+      const page = new DashboardPage(authenticatedPage);
+      await new DashboardSteps(page).runApT201();
+    },
+  });
+});
+```
+
+### Page object (`e2e/pages/{feature}/example.page.ts`)
+```typescript
+import { expect, type Locator, type Page } from "@playwright/test";
+
+export class DashboardPage {
+  readonly title: Locator;
+  readonly totalTasksCard: Locator;
+
+  constructor(readonly page: Page) {
+    this.title = page.locator('[data-cy="dashboard-title"]');
+    this.totalTasksCard = page.locator('[data-cy="card-total"]');
+  }
+
+  async navigateTo() {
+    await this.page.goto("/dashboard");
+    await expect(this.title).toBeVisible();
+  }
+}
+```

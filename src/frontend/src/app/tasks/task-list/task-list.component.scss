@@ -1,0 +1,26 @@
+.task-list {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  &__filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__table {
+    width: 100%;
+  }
+
+  &__link {
+    cursor: pointer;
+    color: #1976d2;
+    text-decoration: underline;
+  }
+}

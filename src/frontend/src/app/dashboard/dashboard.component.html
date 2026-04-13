@@ -1,0 +1,74 @@
+<div class="dashboard" data-cy="dashboard-page">
+  <h1 data-cy="dashboard-title">Dashboard</h1>
+
+  <div class="dashboard__cards" data-cy="dashboard-summary-cards">
+    <mat-card class="dashboard__card" data-cy="card-total">
+      <mat-card-header>
+        <mat-card-title>Total Tasks</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <span class="dashboard__card-value" data-cy="card-total-value">{{ totalTasks() }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__card dashboard__card--completed" data-cy="card-completed">
+      <mat-card-header>
+        <mat-card-title>Completed</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <span class="dashboard__card-value" data-cy="card-completed-value">{{ completedTasks() }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__card dashboard__card--progress" data-cy="card-in-progress">
+      <mat-card-header>
+        <mat-card-title>In Progress</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <span class="dashboard__card-value" data-cy="card-in-progress-value">{{ inProgressTasks() }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__card dashboard__card--pending" data-cy="card-pending">
+      <mat-card-header>
+        <mat-card-title>Pending</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <span class="dashboard__card-value" data-cy="card-pending-value">{{ pendingTasks() }}</span>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <h2 data-cy="recent-tasks-heading">Recent Tasks</h2>
+
+  <table mat-table [dataSource]="recentTasks()" class="dashboard__table" data-cy="dashboard-tasks-table">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let task">
+        <a class="dashboard__task-link" (click)="openTask(task.id)" data-cy="task-link">{{ task.name }}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let task">
+        <mat-chip-set>
+          <mat-chip [highlighted]="task.status === 'Completed'" data-cy="task-status-chip">{{ task.status }}</mat-chip>
+        </mat-chip-set>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="priority">
+      <th mat-header-cell *matHeaderCellDef>Priority</th>
+      <td mat-cell *matCellDef="let task" data-cy="task-priority">{{ task.priority }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="dueDate">
+      <th mat-header-cell *matHeaderCellDef>Due Date</th>
+      <td mat-cell *matCellDef="let task" data-cy="task-due-date">{{ task.dueDate }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns" data-cy="task-row"></tr>
+  </table>
+</div>

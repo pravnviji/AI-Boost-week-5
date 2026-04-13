@@ -1,0 +1,83 @@
+<div class="task-list" data-cy="task-list-page">
+  <div class="task-list__header">
+    <h1 data-cy="task-list-title">Tasks</h1>
+    <button mat-raised-button color="primary" (click)="createTask()" data-cy="btn-create-task">
+      <mat-icon>add</mat-icon> New Task
+    </button>
+  </div>
+
+  <div class="task-list__filters" data-cy="task-list-filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Search</mat-label>
+      <input matInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search tasks..." data-cy="filter-search" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" data-cy="filter-status">
+        <mat-option value="">All</mat-option>
+        @for (s of statuses; track s) {
+          <mat-option [value]="s">{{ s }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Priority</mat-label>
+      <mat-select [ngModel]="priorityFilter()" (ngModelChange)="priorityFilter.set($event)" data-cy="filter-priority">
+        <mat-option value="">All</mat-option>
+        @for (p of priorities; track p) {
+          <mat-option [value]="p">{{ p }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button (click)="clearFilters()" data-cy="btn-clear-filters">
+      <mat-icon>clear</mat-icon> Clear Filters
+    </button>
+  </div>
+
+  <table mat-table [dataSource]="filteredTasks()" class="task-list__table" data-cy="task-list-table">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let task">
+        <a class="task-list__link" (click)="openTask(task.id)" data-cy="task-link">{{ task.name }}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let task">
+        <mat-chip-set>
+          <mat-chip [highlighted]="task.status === 'Completed'" data-cy="task-status-chip">{{ task.status }}</mat-chip>
+        </mat-chip-set>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="priority">
+      <th mat-header-cell *matHeaderCellDef>Priority</th>
+      <td mat-cell *matCellDef="let task" data-cy="task-priority">{{ task.priority }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="dueDate">
+      <th mat-header-cell *matHeaderCellDef>Due Date</th>
+      <td mat-cell *matCellDef="let task" data-cy="task-due-date">{{ task.dueDate }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let task">
+        <button mat-icon-button color="primary" (click)="openTask(task.id)" data-cy="btn-edit-task">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteTask(task.id)" data-cy="btn-delete-task">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns" data-cy="task-row"></tr>
+  </table>
+</div>
