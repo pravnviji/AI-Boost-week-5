@@ -6,6 +6,9 @@
     "test": "npx playwright test",
     "test:headed": "npx playwright test --headed",
     "test:ui": "npx playwright test --ui",
+    "test:sync-zephyr": "npx playwright test; node ../docs/scenarios/update-zephyr-automation-status.mjs",
+    "zephyr:sync": "node ../docs/scenarios/update-zephyr-automation-status.mjs",
+    "execute": "node ./scripts/execute.mjs",
     "report": "npx playwright show-report"
   },
   "devDependencies": {

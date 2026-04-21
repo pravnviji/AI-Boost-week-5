@@ -1,0 +1,50 @@
+---
+description: How to handle "execute AP-T###" / "execute AP-E###" requests
+globs:
+alwaysApply: true
+---
+
+# Executing E2E Tests by Zephyr Key
+
+When the user asks to **execute a Zephyr Scale test case or execution key** — e.g.
+
+- "execute AP-T163"
+- "run AP-T163"
+- "execute AP-E42"
+
+…run the wrapper script that does BOTH things in a single command:
+
+```bash
+npm --prefix e2e run execute -- <KEY>
+# or
+node e2e/scripts/execute.mjs <KEY>
+```
+
+The script performs:
+
+1. `npx playwright test -g <KEY>` inside `e2e/`.
+   - The `ZephyrReporter` (configured in `e2e/playwright.config.ts`) automatically
+     publishes the execution result (Pass / Fail / Blocked) to the Zephyr test
+     cycle defined by `ZEPHYR_TEST_CYCLE_KEY` (default `AP-R10`).
+2. `node docs/scenarios/update-zephyr-automation-status.mjs --testcase-status=Approved`
+   - Flips the **Automation Status** custom field on every passing `AP-T###` key
+     from `Not Automated` → `Automated`.
+   - Sets the test case **Status** (under *Details*) to `Approved` on pass.
+   - Override the target status with env var `ZEPHYR_PASS_TESTCASE_STATUS`
+     (e.g. `ZEPHYR_PASS_TESTCASE_STATUS=Automated` to use a different workflow state).
+
+Do **not** run the raw `npx playwright test -g <KEY>` command when the user asks
+to "execute" a Zephyr key — the user wants Zephyr updated as part of the flow.
+
+## Prerequisites
+
+- `e2e/.env` must define `ZEPHYR_API_TOKEN`, `ZEPHYR_PROJECT_KEY`, and
+  optionally `ZEPHYR_TEST_CYCLE_KEY`.
+- The Angular frontend and FastAPI backend must be running (see root `README.md`).
+
+## Reporting back
+
+After the run, summarise:
+
+- Playwright result (pass/fail + duration).
+- Zephyr sync outcome (which keys were updated vs unchanged).
