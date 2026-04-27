@@ -7,13 +7,12 @@ test.describe('Task List', () => {
   test.describe.configure({ mode: 'serial' });
 
   // ──── Task Row Navigation ──────────────────────────────────────────
+// AP-T163 -- Generate Test Case from Zephyr Scale
+//@.cursor/skills/e2e/code-conventions.mdc
+//run automate
 
-  appTest({
-    zephyrTestCaseKey: 'AP-T163',
-    name: 'Task Row Navigation - User clicks a task row and navigates to task detail',
-    fn: async ({ authenticatedPage }) => {
-      const page = new TaskListPage(authenticatedPage);
-      await new TaskListSteps(page).runApT163();
-    },
-  });
+//execute AP-T163 - execute in cursor ---> internally —> npm --prefix e2e run execute -- AP-T163
+//npx playwright test -g "AP-T163" -- Manual
+//npx playwright show-report -- Check report
+
 });
